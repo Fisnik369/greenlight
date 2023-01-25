@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"io"
+	"log"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 type envelope map[string]interface{}
@@ -71,4 +74,44 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, data in
 	}
 
 	return nil
+}
+
+// We will use these 3 following functions to extract and parse values from the query string (return the values passed as query parameter strings),
+
+func (app *application) readString(qs url.Values, key string, defaultValue string) string {
+	s := qs.Get(key)
+
+	if s == "" {
+		return defaultValue
+	}
+
+	return s
+}
+
+// it reads a string value from the query string and then splits it into a slice on the comma character
+func (app *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
+	csv := qs.Get(key)
+
+	if csv == "" {
+		return defaultValue
+	}
+
+	return strings.Split(csv, ",")
+}
+
+// it reads a string value from the query string and converts it to an integer before returning
+func (app *application) readInt(qs url.Values, key string, defaultValue int) int {
+	s := qs.Get(key)
+
+	if s == "" {
+		return defaultValue
+	}
+
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		log.Fatal("It must be an integer value")
+		return defaultValue
+	}
+
+	return i
 }
